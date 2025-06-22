@@ -15,6 +15,8 @@ migrate = Migrate(app, db)
 
 db.init_app(app)
 
+
+
 @app.route('/clear')
 def clear_session():
     session['page_views'] = 0
@@ -27,8 +29,21 @@ def index_articles():
 
 @app.route('/articles/<int:id>')
 def show_article(id):
+    if 'page_views' not in session:
+        session['page_views'] = 0
 
-    pass
+    session['page_views'] += 1
+    if session['page_views']<4:
+        article=Article.query.filter(Article.id==id).first()
+        if article:
+            response=make_response(jsonify(article.to_dict()),200)
+        else:
+            response = make_response({'message': 'Article not found'}, 404)
+    else:
+        response=make_response({'message': 'Maximum pageview limit reached'},401)
+        
+    return response
 
 if __name__ == '__main__':
     app.run(port=5555)
+
